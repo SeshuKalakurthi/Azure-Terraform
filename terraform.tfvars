@@ -1,0 +1,8 @@
+rgname          = "terraformrg"
+storageaccname  = "tfstoragesa01"
+location        = "West Europe"
+storageacctype  = "Standard_LRS"
+storageacckind  = "Storage"
+kvname          = "myterraformkv1"
+servicebusname  = "terraformsb01"
+functionappname = "terraform-win-function"
