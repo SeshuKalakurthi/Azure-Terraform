@@ -93,6 +93,8 @@ resource "azurerm_app_service" "app1" {
     "AzureWebJobsStorage"            = azurerm_storage_account.storageacc.primary_connection_string
     "APPINSIGHTS_INSTRUMENTATIONKEY" = azurerm_application_insights.insights1.connection_string
 
+    "storage" = "${azurerm_key_vault_secret.storageaccountkey.value}"
+
   }
 }
 
@@ -190,4 +192,62 @@ resource "azapi_resource" "sbkey" {
       value       = azurerm_servicebus_namespace.servicebus.default_primary_connection_string
     }
   })
+}
+
+resource "azurerm_key_vault" "kv1" {
+  enabled_for_template_deployment = true
+  location                        = "westeurope"
+  name                            = "myterraformvault1"
+  resource_group_name             = "terraformrg"
+  sku_name                        = "standard"
+  soft_delete_retention_days      = 7
+  tenant_id                       = "ad5c5b58-e327-4cdb-8f2c-2b534d3ae08b"
+}
+
+resource "azurerm_key_vault_access_policy" "accesspolicy1" {
+  key_vault_id = azurerm_key_vault.kv1.id
+  tenant_id    = "ad5c5b58-e327-4cdb-8f2c-2b534d3ae08b"
+  object_id    = "e38a1e64-37f4-45a2-8778-16f63e2cdc49"
+
+  key_permissions = [
+    "Get","List"
+  ]
+
+  secret_permissions = [
+    "Get","List","Set"
+  ]
+}
+
+resource "azurerm_key_vault_access_policy" "accesspolicy2" {
+  key_vault_id = azurerm_key_vault.kv1.id
+  tenant_id    = "ad5c5b58-e327-4cdb-8f2c-2b534d3ae08b"
+  object_id    = azurerm_app_service.app1.identity.0.principal_id
+
+  key_permissions = [
+    "Get","List"
+  ]
+
+  secret_permissions = [
+    "Get","List","Set"
+  ]
+}
+
+resource "azurerm_key_vault_access_policy" "accesspolicy3" {
+  key_vault_id = azurerm_key_vault.kv1.id
+  tenant_id    = "ad5c5b58-e327-4cdb-8f2c-2b534d3ae08b"
+  object_id    = "4f2cb568-9bd0-43b8-a855-4ca691808522"
+
+  key_permissions = [
+    "Get","List"
+  ]
+
+  secret_permissions = [
+    "Get","List","Set"
+  ]
+}
+
+resource "azurerm_key_vault_secret" "storageaccountkey" {
+  name         = "sakey1"
+  value        = azurerm_storage_account.storageacc.primary_connection_string
+  key_vault_id = azurerm_key_vault.kv1.id
 }

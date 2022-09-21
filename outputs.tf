@@ -12,10 +12,6 @@ output "rg" {
   value = azapi_resource.rg.id
 }
 
-output "appid" {
-  value = azurerm_app_service.app1.id
-}
-
 output "identity" {
   value = azurerm_app_service.app1.identity.0.principal_id
 }
