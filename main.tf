@@ -26,11 +26,11 @@
   })
 }*/
 
-//        STORAGE ACCOUNT 
+// ~~~~~~~~~~~~~~~~~~ STORAGE ACCOUNT ~~~~~~~~~~~~~~~~~~~~
 
 resource "azurerm_storage_account" "storageacc" {
   name                             = var.storageaccname
-  resource_group_name              = azapi_resource.rg.name
+  resource_group_name              = azurerm_resource_group.rg.name
   location                         = var.location
   account_tier                     = "Standard"
   account_kind                     = var.storageacckind
@@ -38,17 +38,17 @@ resource "azurerm_storage_account" "storageacc" {
   cross_tenant_replication_enabled = "false"
 }
 
-//        SERVICEBUS NAMESPACE
+// ~~~~~~~~~~~~~~~~~ SERVICEBUS NAMESPACE ~~~~~~~~~~~~~~~~~~~~
 
 resource "azurerm_servicebus_namespace" "servicebus" {
   name                = var.servicebusname
   location            = var.location
-  resource_group_name = azapi_resource.rg.name
+  resource_group_name = azurerm_resource_group.rg.name
   sku                 = "Standard"
   capacity            = "0"
 }
 
-//        SERVICEBUS QUEUE
+// ~~~~~~~~~~~~~~~~~~~ ADD SERVICEBUS QUEUE ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 resource "azurerm_servicebus_queue" "queue1" {
   name                                    = "terraformqueue1"
@@ -62,22 +62,22 @@ resource "azurerm_servicebus_queue" "queue1" {
   auto_delete_on_idle                     = "P10675199DT2H48M5.4775807S"
 }
 
-#       APP SERVICE PLAN
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~ APP SERVICE PLAN ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 resource "azurerm_service_plan" "plan1" {
   name                = "terraform-win-app-plan"
   location            = var.location
-  resource_group_name = azapi_resource.rg.name
+  resource_group_name = azurerm_resource_group.rg.name
   os_type             = "Windows"
   sku_name            = "S1"
 }
 
-//      APP SERVICE
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ APP SERVICE ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 resource "azurerm_app_service" "app1" {
   name                = var.functionappname
   location            = var.location
-  resource_group_name = azapi_resource.rg.name
+  resource_group_name = azurerm_resource_group.rg.name
   app_service_plan_id = azurerm_service_plan.plan1.id
   identity {
     type = "SystemAssigned"
@@ -98,23 +98,23 @@ resource "azurerm_app_service" "app1" {
   }
 }
 
-#       APPLICATION INSIGHTS
+# ~~~~~~~~~~~~~~~~~~~~~~ APPLICATION INSIGHTS ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 resource "azurerm_application_insights" "insights1" {
   name                = "terraform-function-appinsights"
-  resource_group_name = azapi_resource.rg.name
+  resource_group_name = azurerm_resource_group.rg.name
   location            = var.location
   application_type    = "web"
 }
 
 
-//        KEYVAULT & ACCESS POLICIES
+// ~~~~~~~~~~~~~~~~~~~~~~ KEYVAULT & ACCESS POLICIES ~~~~~~~~~~~~~~~~~~~~~~~~
 
 resource "azapi_resource" "kv" {
   type      = "Microsoft.KeyVault/vaults@2022-07-01"
   name      = var.kvname
   location  = var.location
-  parent_id = azapi_resource.rg.id
+  parent_id = azurerm_resource_group.rg.id
   body = jsonencode({
     properties = {
       accessPolicies = [
@@ -160,12 +160,12 @@ resource "azapi_resource" "kv" {
   })
 }
 
-#       STORAGE ACCOUNT SECRET      
+# ~~~~~~~~~~~~~~~~~~~~~ ADD STORAGE ACCOUNT SECRET ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 resource "azapi_resource" "sakey" {
   type      = "Microsoft.KeyVault/vaults/secrets@2022-07-01"
   name      = "storageacckey"
-  parent_id = azapi_resource.kv.id
+  parent_id = azurerm_resource_group.kv.id
   body = jsonencode({
     properties = {
       attributes = {
@@ -177,12 +177,12 @@ resource "azapi_resource" "sakey" {
   })
 }
 
-#       SERVICEBUS NAMESPACE SECRET
+# ~~~~~~~~~~~~~~~~~~~~~~ ADD SERVICEBUS NAMESPACE SECRET ~~~~~~~~~~~~~~~~~~~~~~~~
 
 resource "azapi_resource" "sbkey" {
   type      = "Microsoft.KeyVault/vaults/secrets@2022-07-01"
   name      = "servicebuskey"
-  parent_id = azapi_resource.kv.id
+  parent_id = azurerm_resource_group.kv.id
   body = jsonencode({
     properties = {
       attributes = {
@@ -194,6 +194,8 @@ resource "azapi_resource" "sbkey" {
   })
 }
 
+// ~~~~~~~~~~~~~~~~~~~~~~~~ AZURERM KEY VAULT ~~~~~~~~~~~~~~~~~~~~~~~~~
+
 resource "azurerm_key_vault" "kv1" {
   enabled_for_template_deployment = true
   location                        = "westeurope"
@@ -203,6 +205,8 @@ resource "azurerm_key_vault" "kv1" {
   soft_delete_retention_days      = 7
   tenant_id                       = "ad5c5b58-e327-4cdb-8f2c-2b534d3ae08b"
 }
+
+// ~~~~~~~~~~~~~~~~~~~~ AZURERM KV ACCESS POLICY ~~~~~~~~~~~~~~~~~~~~~~
 
 resource "azurerm_key_vault_access_policy" "accesspolicy1" {
   key_vault_id = azurerm_key_vault.kv1.id
@@ -218,6 +222,8 @@ resource "azurerm_key_vault_access_policy" "accesspolicy1" {
   ]
 }
 
+// ~~~~~~~~~~~~~~~~~~~~ AZURERM KV ACCESS POLICY ~~~~~~~~~~~~~~~~~~~~~~
+
 resource "azurerm_key_vault_access_policy" "accesspolicy2" {
   key_vault_id = azurerm_key_vault.kv1.id
   tenant_id    = "ad5c5b58-e327-4cdb-8f2c-2b534d3ae08b"
@@ -232,6 +238,8 @@ resource "azurerm_key_vault_access_policy" "accesspolicy2" {
   ]
 }
 
+// ~~~~~~~~~~~~~~~~~~~~ AZURERM KV ACCESS POLICY ~~~~~~~~~~~~~~~~~~~~~~
+
 resource "azurerm_key_vault_access_policy" "accesspolicy3" {
   key_vault_id = azurerm_key_vault.kv1.id
   tenant_id    = "ad5c5b58-e327-4cdb-8f2c-2b534d3ae08b"
@@ -245,6 +253,8 @@ resource "azurerm_key_vault_access_policy" "accesspolicy3" {
     "Get","List","Set"
   ]
 }
+
+// ~~~~~~~~~~~~~~~~~~~~ AZURERM KV ADD SECRET ~~~~~~~~~~~~~~~~~~~~~~
 
 resource "azurerm_key_vault_secret" "storageaccountkey" {
   name         = "sakey1"

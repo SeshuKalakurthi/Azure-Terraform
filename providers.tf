@@ -29,9 +29,7 @@ provider "azapi" {
   tenant_id       = "ad5c5b58-e327-4cdb-8f2c-2b534d3ae08b"
 }
 
-resource "azapi_resource" "rg" {
-  type      = "Microsoft.Resources/resourceGroups@2021-04-01"
-  name      = var.rgname
-  location  = var.location
-  parent_id = "/subscriptions/f8d1356e-e5e2-4298-bf41-7e6e8fbb11e3"
+resource "azurerm_resource_group" "rg" {
+  name     = var.rgname
+  location = var.location
 }
